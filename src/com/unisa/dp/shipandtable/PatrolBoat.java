@@ -1,9 +1,9 @@
 package com.unisa.dp.shipandtable;
 
-public class PatrolBoat implements Ship{
-    private final int dim=2;
-    private Integer x_start=null;
-    private Integer x_end=null;
+public class PatrolBoat implements Ship {
+    private final int dim = 2;
+    private Integer x_start = null;
+    private Integer x_end = null;
     private Integer y_start = null;
     private Integer y_end = null;
     private String name;
@@ -13,7 +13,7 @@ public class PatrolBoat implements Ship{
         this.x_end = x_end;
         this.y_start = y_start;
         this.y_end = y_end;
-        this.name="Patroal Boat";
+        this.name = "Patroal Boat";
     }
 
     @Override
@@ -47,6 +47,6 @@ public class PatrolBoat implements Ship{
     }
 
     public String getType() {
-        return this.name.substring(0,1);
+        return this.name.substring(0, 1);
     }
 }

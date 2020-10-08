@@ -9,32 +9,31 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
 
 public class ServerUDP {
-    private static Map<String, Table> mapgame=new HashMap<>();
-    private static Map<String,String> match=new HashMap<>();
-    private static Map<String,DatagramPacket> userconnect=new HashMap<>();
-    private static ArrayList<String> wait_game=new ArrayList<>();
-    private static Map<String,Integer> colcon=new HashMap<>();
-    private static ArrayList<String> inserttable=new ArrayList<>();
-    private static Logger log=Logger.getLogger("global");
+    private static Map<String, Table> mapgame = new HashMap<>();
+    private static Map<String, String> match = new HashMap<>();
+    private static Map<String, DatagramPacket> userconnect = new HashMap<>();
+    private static ArrayList<String> wait_game = new ArrayList<>();
+    private static Map<String, Integer> colcon = new HashMap<>();
+    private static ArrayList<String> inserttable = new ArrayList<>();
+    private static Logger log = Logger.getLogger("global");
 
-    private static void placeShip (Ship a, String user, ByteArrayOutputStream msg_send, DatagramPacket packet_server_send, DatagramSocket socket_server, InetAddress addr) throws IOException{
+    private static void placeShip(Ship a, String user, ByteArrayOutputStream msg_send, DatagramPacket packet_server_send, DatagramSocket socket_server, InetAddress addr) throws IOException {
         Table t = mapgame.get(user);
-        String insert=t.insertShip(a);
-        if(insert.equals("")) {
-            log.info("L' utente " + user + " ha inserito un Air Craft nella sua tavola");
-            int port_send=userconnect.get(user).getPort();
-            msg_send=new ByteArrayOutputStream();
+        String insert = t.insertShip(a);
+        if (insert.equals("")) {
+            log.info("L' utente " + user + " ha inserito un " + a.getName() + " nella sua tavola");
+            int port_send = userconnect.get(user).getPort();
+            msg_send = new ByteArrayOutputStream();
             msg_send.writeBytes(t.PlayerPrint().getBytes());
-            packet_server_send=new DatagramPacket(msg_send.toByteArray(), msg_send.size(),addr,port_send);
+            packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, port_send);
             socket_server.send(packet_server_send);
             log.info("Invio la stampa della tavola");
-        }else {
+        } else {
             msg_send = new ByteArrayOutputStream();
             msg_send.writeBytes(insert.getBytes());
             int port_send = userconnect.get(user).getPort();
@@ -59,11 +58,12 @@ public class ServerUDP {
         int PORT = 7777, buffer_dim = 65507;
         InetAddress addr = InetAddress.getByName("localhost");
         DatagramSocket socket_server = new DatagramSocket(PORT);
-        byte[] buff_rec = new byte[buffer_dim];
+        byte[] buff_rec;
         DatagramPacket packet_server_recive, packet_server_send = null;
         ByteArrayOutputStream msg_send;
 
         while (true) {
+            buff_rec = new byte[buffer_dim];
             packet_server_recive = new DatagramPacket(buff_rec, buffer_dim);
             log.info("Sono in attesa di ricevere pacchetti");
             socket_server.receive(packet_server_recive);
@@ -90,6 +90,7 @@ public class ServerUDP {
                     wait_game.add(username);
                     userconnect.put(username, packet_server_recive);
                     String resp = "user_ok\n";
+                    msg_send = new ByteArrayOutputStream();
                     msg_send.writeBytes(resp.getBytes());
                     int port_send = packet_server_recive.getPort();
                     packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, port_send);
@@ -136,14 +137,16 @@ public class ServerUDP {
                 String user = recived.substring(0, index_user);
                 inserttable.add(user);
 
-                if(inserttable.contains(match.get(user))){
+                if (inserttable.contains(match.get(user))) {
                     msg_send = new ByteArrayOutputStream();
-                    msg_send.writeBytes("attack".getBytes());
+                    msg_send.writeBytes("attack\n".getBytes());
                     packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, userconnect.get(user).getPort());
+                    socket_server.send(packet_server_send);
+                    packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, userconnect.get(match.get(user)).getPort());
                     socket_server.send(packet_server_send);
                 } else {
                     msg_send = new ByteArrayOutputStream();
-                    msg_send.writeBytes("wait_game".getBytes());
+                    msg_send.writeBytes("wait_game\n".getBytes());
                     packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, userconnect.get(user).getPort());
                     socket_server.send(packet_server_send);
                 }
@@ -181,7 +184,7 @@ public class ServerUDP {
                     msg_send.writeBytes("gameover".getBytes());
                     packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, send_port_adv);
                     socket_server.send(packet_server_send);
-                    log.info("L' utente " + user + " ha vinto contro il suo avversario" + adv);
+                    log.info("L' utente " + user + " ha vinto contro il suo avversario " + adv);
 
                 } else if (t2.gameOver()) {
                     match.remove(user);
@@ -202,11 +205,19 @@ public class ServerUDP {
                     socket_server.send(packet_server_send);
                     log.info("L' utente " + user + " ha perso il suo avversario" + adv);
                 } else if (inserttable.contains(adv) && inserttable.contains(user)) {
-                    t1.attack(row, col);
                     int send_port = userconnect.get(user).getPort();
+                    int send_port_adw=userconnect.get(adv).getPort();
+                    msg_send=new ByteArrayOutputStream();
                     msg_send.writeBytes(t1.ServerPrint().getBytes());
                     packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, send_port);
                     socket_server.send(packet_server_send);
+                    msg_send=new ByteArrayOutputStream();
+                    msg_send.writeBytes("attack\n".getBytes());
+                    msg_send.writeBytes(t2.ServerPrint().getBytes());
+                    packet_server_send = new DatagramPacket(msg_send.toByteArray(), msg_send.size(), addr, send_port_adw);
+                    socket_server.send(packet_server_send);
+                    t1.attack(row, col);
+
                     log.info("L' utente " + user + " attacca il suo avversario" + adv);
                 }
             }
@@ -215,7 +226,7 @@ public class ServerUDP {
                 msg_send = new ByteArrayOutputStream();
                 String gamer1 = wait_game.remove(0);
                 String gamer2 = wait_game.remove(0);
-                log.info("Gli utenti " + gamer1 + " e " + gamer2 + "si sono seduti al tavolo");
+                log.info("Gli utenti " + gamer1 + " e " + gamer2 + " si sono seduti al tavolo");
                 match.put(gamer1, gamer2);
                 match.put(gamer2, gamer1);
                 DatagramPacket packet_gamer1 = userconnect.get(gamer1);

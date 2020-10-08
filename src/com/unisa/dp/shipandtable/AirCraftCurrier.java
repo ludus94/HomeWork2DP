@@ -1,9 +1,9 @@
 package com.unisa.dp.shipandtable;
 
-public class AirCraftCurrier implements Ship{
-    private final int dim=5;
-    private Integer x_start=null;
-    private Integer x_end=null;
+public class AirCraftCurrier implements Ship {
+    private final int dim = 5;
+    private Integer x_start = null;
+    private Integer x_end = null;
     private Integer y_start = null;
     private Integer y_end = null;
     private String name;
@@ -13,7 +13,7 @@ public class AirCraftCurrier implements Ship{
         this.x_end = x_end;
         this.y_start = y_start;
         this.y_end = y_end;
-        this.name="Air Craft Currier";
+        this.name = "Air Craft Currier";
     }
 
     @Override
@@ -48,6 +48,6 @@ public class AirCraftCurrier implements Ship{
 
     @Override
     public String getType() {
-        return this.name.substring(0,1);
+        return this.name.substring(0, 1);
     }
 }
